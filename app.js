@@ -50,14 +50,13 @@ addNewTaskForm.addEventListener("submit", (e) => {
   const date = formData[1].value;
   const time = formData[2].value;
   const allTasks = JSON.parse(localStorage.getItem("Tasks")) || [];
-  let id = (allTasks.length == 0) ? 0 : allTasks[allTasks.length-1].Id+1;
+  let id = allTasks.length == 0 ? 0 : allTasks[allTasks.length - 1].Id + 1;
   const newTask = {
     Id: id,
     Description: description,
     Date: date,
     Time: time,
   };
-
 
   allTasks.push(newTask);
 
@@ -69,10 +68,78 @@ const taskContainer = document.createElement("div");
 taskContainer.classList.add("task-container");
 container.appendChild(taskContainer);
 
+//Function for Rendering The Tasks
+const renderTasks = (allTasks, TasksContainer) => {
+  allTasks.forEach((task) => {
+    const Description = task.Description;
+    const Time = task.Time;
+    const timeArray = Time.split(":");
+    let TimeString =
+      String(Number(timeArray[0]) % 12 === 0 ? 12 : Number(timeArray[0]) % 12) +
+      ":" +
+      timeArray[1];
+
+    if (Number(timeArray[0]) < 12) {
+      TimeString = TimeString + " AM";
+    } else {
+      TimeString = TimeString + " PM";
+    }
+
+    const todo = document.createElement("div");
+    todo.classList.add("todo");
+    TasksContainer.appendChild(todo);
+
+    const timeAndDescriptionContainer = document.createElement("div");
+    timeAndDescriptionContainer.classList.add("time-description-container");
+
+    todo.appendChild(timeAndDescriptionContainer);
+
+    const todoDescription = document.createElement("p");
+    todoDescription.classList.add("todo-description");
+    todoDescription.innerHTML = `${Description} at <span style='font-weight:bold'>${TimeString}</span>`;
+    timeAndDescriptionContainer.appendChild(todoDescription);
+
+    const buttonsContainer = document.createElement("div");
+
+    const editToDo = document.createElement("button");
+    editToDo.innerText = "Edit";
+    buttonsContainer.appendChild(editToDo);
+
+    const deleteToDo = document.createElement("button");
+    deleteToDo.innerText = "Delete";
+    buttonsContainer.appendChild(deleteToDo);
+
+    todo.appendChild(buttonsContainer);
+  });
+};
+
+const SortByDate = (allTasks, TasksContainer)=>{
+    const tasksByDates = {};
+
+    allTasks.forEach((task)=>{
+        if(Object.keys(tasksByDates).includes(task.Date)){
+            tasksByDates[task.Date].push(task);
+        }
+        else{
+            tasksByDates[task.Date] = [task];
+        }
+    });
+
+    for(let date in tasksByDates){
+        const dateContainer = document.createElement("div");
+        dateContainer.classList.add('date-container');
+        TasksContainer.appendChild(dateContainer);
+
+        const dateHeading = document.createElement("h3");
+        dateHeading.innerText = date;
+        dateContainer.appendChild(dateHeading);
+        renderTasks(tasksByDates[date], dateContainer);
+    }
+}
+
 const loadPage = () => {
-    taskContainer.innerHTML = "";
+  taskContainer.innerHTML = "";
   const allTasks = JSON.parse(localStorage.getItem("Tasks")) || [];
-  console.log(allTasks);
 
   if (allTasks.length === 0) {
     const emptyContainer = document.createElement("h1");
@@ -80,57 +147,61 @@ const loadPage = () => {
     emptyContainer.innerText = "No Tasks";
     taskContainer.appendChild(emptyContainer);
   } else {
+    const DueTasks = [],
+      TodaysTasks = [],
+      upComingTasks = [];
+
+    const date = new Date();
+    const Today = `${date.getFullYear()}-${
+      date.getMonth() + 1
+    }-${date.getDate()}`;
+
+    allTasks.sort((a, b)=> new Date(a.Date) - new Date(b.Date));
+
     allTasks.forEach((task) => {
-      const Description = task.Description;
-      const Date = task.Date;
-      const Time = task.Time;
-      const timeArray = Time.split(":");
-      let TimeString =
-        String(
-          Number(timeArray[0]) % 12 === 0 ? 12 : Number(timeArray[0]) % 12
-        ) +
-        ":" +
-        timeArray[1];
-
-      if (Number(timeArray[0]) < 12) {
-        TimeString = TimeString + " AM";
+      if (task.Date === Today) {
+        TodaysTasks.push(task);
+      } else if (task.Date > Today) {
+        upComingTasks.push(task);
       } else {
-        TimeString = TimeString + " PM";
+        DueTasks.push(task);
       }
-
-      console.log(TimeString);
-      const todo = document.createElement("div");
-      todo.classList.add("todo");
-      taskContainer.appendChild(todo);  
-
-      const timeAndDescriptionContainer = document.createElement("div");
-      timeAndDescriptionContainer.classList.add("time-description-container");
-
-      todo.appendChild(timeAndDescriptionContainer);
-
-      const todoDescription = document.createElement("p");
-      todoDescription.classList.add("todo-description");
-      todoDescription.innerHTML = `${Description} at <span style='font-weight:bold'>${TimeString}</span>`;
-      timeAndDescriptionContainer.appendChild(todoDescription);
-      
-    //   const todoTime = document.createElement("h3");
-    //   todoTime.classList.add("todo-description");
-    //   todoTime.innerText = TimeString;
-      
-    //   timeAndDescriptionContainer.appendChild(todoTime);
-
-      const buttonsContainer = document.createElement("div");
-
-      const editToDo = document.createElement("button");
-      editToDo.innerText = "Edit";
-      buttonsContainer.appendChild(editToDo);
-
-      const deleteToDo = document.createElement("button");
-      deleteToDo.innerText = "Delete";
-      buttonsContainer.appendChild(deleteToDo);
-
-      todo.appendChild(buttonsContainer);
     });
+
+
+    if (DueTasks.length > 0) {
+      const dueTasksContainer = document.createElement("div");
+      dueTasksContainer.classList.add("due-tasks");
+
+      taskContainer.appendChild(dueTasksContainer);
+      const heading = document.createElement("h2");
+      heading.innerText = "Due Tasks";
+
+      dueTasksContainer.appendChild(heading);
+      SortByDate(DueTasks, dueTasksContainer);
+    }
+
+    if (TodaysTasks.length > 0) {
+      const todaysTasksContainer = document.createElement("div");
+      todaysTasksContainer.classList.add("todays-tasks");
+
+      taskContainer.appendChild(todaysTasksContainer);
+      const heading = document.createElement("h2");
+      heading.innerText = "Today";
+
+      todaysTasksContainer.appendChild(heading);
+      renderTasks(TodaysTasks, todaysTasksContainer);
+    }
+
+    if (upComingTasks.length > 0) {
+      const todaysTasksContainer = document.createElement("div");
+      todaysTasksContainer.classList.add("upcoming-tasks");
+      taskContainer.appendChild(todaysTasksContainer);
+      const heading = document.createElement("h2");
+      heading.innerText = "Upcoming Tasks";
+      todaysTasksContainer.appendChild(heading);
+      SortByDate(upComingTasks, todaysTasksContainer);
+    }
   }
 };
 
