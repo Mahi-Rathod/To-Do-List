@@ -70,7 +70,7 @@ input[type="time"]{
     max-width: 4rem;
 }
 
-button[type="submit"]{
+button[type="submit"], button[type="cancel"], .edit-delete-container button{
     background-color: #4caf50;
     color: White;
     cursor: pointer;
@@ -82,6 +82,65 @@ button[type="submit"]{
     font-weight: bold;
 }
 
-button[type="submit"]:hover{
+button[type="submit"]:hover, .edit-delete-container button:hover{
     background-color: #388e3c;
+}
+
+.task-container{
+    width: 85%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.due-tasks, .todays-tasks, .upcoming-tasks{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+    gap: 0.5rem;
+}
+
+.todo{
+    width: 100%;
+    background-color: white;
+    box-shadow: 1px 1px 8px gray;
+    border-radius: 5px;
+    display: flex;
+    height: 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-inline: 1rem;
+}
+
+.edit-delete-container{
+    width: 40%;
+    min-width: 25rem;
+    display: flex;
+    justify-content: end;
+    gap: 1rem;
+}
+
+.edit-task-window{
+    position: absolute;
+    width: 50%;
+    height: 5rem;
+    top: 40%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    background-color: #ffffff;
+    box-shadow: 1px 1px 8px gray;
+    border-radius: 5px;
+}
+
+button[type="cancel"], .edit-delete-container button:last-child{
+    background-color: red;
+}
+
+button[type="cancel"]:hover, .edit-delete-container button:last-child:hover{
+    background-color: #fa4f25;
 }

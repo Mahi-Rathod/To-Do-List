@@ -61,12 +61,63 @@ addNewTaskForm.addEventListener("submit", (e) => {
   allTasks.push(newTask);
 
   localStorage.setItem("Tasks", JSON.stringify(allTasks));
+  addNewTaskForm.reset();
   loadPage();
 });
 
 const taskContainer = document.createElement("div");
 taskContainer.classList.add("task-container");
 container.appendChild(taskContainer);
+
+const deleteTask = (IdToDelete) => {
+  let allTasks = JSON.parse(localStorage.getItem("Tasks"));
+  allTasks = allTasks.filter((task) => task.Id !== IdToDelete);
+  localStorage.setItem("Tasks", JSON.stringify(allTasks));
+  loadPage();
+};
+
+const editTask = (IdToEdit) => {
+  console.log(IdToEdit);
+  let allTasks = JSON.parse(localStorage.getItem("Tasks"));
+  let Task = allTasks.find((task) => task.Id === IdToEdit);
+  allTasks = allTasks.filter((task) => task.Id !== IdToEdit);
+
+  const editTaskWindow = document.createElement("div");
+  editTaskWindow.classList.add("edit-task-window");
+  taskContainer.appendChild(editTaskWindow);
+
+  const inputForTask = document.createElement("input");
+  inputForTask.type = "text";
+  inputForTask.name = "description";
+  inputForTask.placeholder = "Add your task here";
+  inputForTask.required = true;
+  inputForTask.value = Task.Description;
+  editTaskWindow.appendChild(inputForTask);
+
+  const updateBtn = document.createElement("button");
+  updateBtn.innerText = "Update";
+  updateBtn.type = "submit"
+  editTaskWindow.appendChild(updateBtn);
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.innerText = "Cancel";
+  cancelBtn.type = "cancel";
+  editTaskWindow.appendChild(cancelBtn);
+
+  updateBtn.addEventListener("click", ()=>{
+    if(inputForTask.value  !== Task.Description.length){
+        Task.Description = inputForTask.value;
+        allTasks.push(Task);
+        localStorage.setItem("Tasks", JSON.stringify(allTasks));
+    }
+    loadPage();
+  });
+
+  cancelBtn.addEventListener("click", ()=>{
+    editTaskWindow.style.display = "none"
+    loadPage();
+  });
+};
 
 //Function for Rendering The Tasks
 const renderTasks = (allTasks, TasksContainer) => {
@@ -100,7 +151,7 @@ const renderTasks = (allTasks, TasksContainer) => {
     timeAndDescriptionContainer.appendChild(todoDescription);
 
     const buttonsContainer = document.createElement("div");
-
+    buttonsContainer.classList.add('edit-delete-container')
     const editToDo = document.createElement("button");
     editToDo.innerText = "Edit";
     buttonsContainer.appendChild(editToDo);
@@ -109,33 +160,38 @@ const renderTasks = (allTasks, TasksContainer) => {
     deleteToDo.innerText = "Delete";
     buttonsContainer.appendChild(deleteToDo);
 
+    //To Delete Task
+    deleteToDo.addEventListener("click", () => deleteTask(task.Id));
+
+    //To Edit Task
+    editToDo.addEventListener("click", () => editTask(task.Id));
+
     todo.appendChild(buttonsContainer);
   });
 };
 
-const SortByDate = (allTasks, TasksContainer)=>{
-    const tasksByDates = {};
+const SortByDate = (allTasks, TasksContainer) => {
+  const tasksByDates = {};
 
-    allTasks.forEach((task)=>{
-        if(Object.keys(tasksByDates).includes(task.Date)){
-            tasksByDates[task.Date].push(task);
-        }
-        else{
-            tasksByDates[task.Date] = [task];
-        }
-    });
-
-    for(let date in tasksByDates){
-        const dateContainer = document.createElement("div");
-        dateContainer.classList.add('date-container');
-        TasksContainer.appendChild(dateContainer);
-
-        const dateHeading = document.createElement("h3");
-        dateHeading.innerText = date;
-        dateContainer.appendChild(dateHeading);
-        renderTasks(tasksByDates[date], dateContainer);
+  allTasks.forEach((task) => {
+    if (Object.keys(tasksByDates).includes(task.Date)) {
+      tasksByDates[task.Date].push(task);
+    } else {
+      tasksByDates[task.Date] = [task];
     }
-}
+  });
+
+  for (let date in tasksByDates) {
+    const dateContainer = document.createElement("div");
+    dateContainer.classList.add("date-container");
+    TasksContainer.appendChild(dateContainer);
+
+    const dateHeading = document.createElement("h3");
+    dateHeading.innerText = date;
+    dateContainer.appendChild(dateHeading);
+    renderTasks(tasksByDates[date], dateContainer);
+  }
+};
 
 const loadPage = () => {
   taskContainer.innerHTML = "";
@@ -156,7 +212,7 @@ const loadPage = () => {
       date.getMonth() + 1
     }-${date.getDate()}`;
 
-    allTasks.sort((a, b)=> new Date(a.Date) - new Date(b.Date));
+    allTasks.sort((a, b) => new Date(a.Date) - new Date(b.Date));
 
     allTasks.forEach((task) => {
       if (task.Date === Today) {
@@ -167,7 +223,6 @@ const loadPage = () => {
         DueTasks.push(task);
       }
     });
-
 
     if (DueTasks.length > 0) {
       const dueTasksContainer = document.createElement("div");
