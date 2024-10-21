@@ -9,13 +9,31 @@ heading.innerText = "To-Do List";
 headingContainer.appendChild(heading);
 container.appendChild(headingContainer);
 
-//Container for the Add new Task
+/* Search bar*/
+const searchBar = document.createElement("input");
+searchBar.placeholder = "Search Task";
+headingContainer.appendChild(searchBar);
 
+let totalTasks = JSON.parse(localStorage.getItem("Tasks")) || [];
+searchBar.addEventListener("keyup", ()=>{
+    const textToCompare = searchBar.value.toLowerCase();
+
+    const taskFound = totalTasks.filter(task=>{
+        return (task.Description.toLowerCase().indexOf(textToCompare) > -1)
+    });
+    
+    const taskContainer = document.querySelector(".task-container");
+    taskContainer.innerHTML = "";
+    loadTodos(taskFound, taskContainer);
+});
+
+//Container for the Add new Task
 const addNewTaskForm = document.createElement("form");
 addNewTaskForm.classList.add("add-new-task");
 
 container.appendChild(addNewTaskForm);
 
+//Input field for Task Description
 const inputForTask = document.createElement("input");
 inputForTask.type = "text";
 inputForTask.name = "description";
@@ -23,26 +41,28 @@ inputForTask.placeholder = "Add your task here";
 inputForTask.required = true;
 addNewTaskForm.appendChild(inputForTask);
 
+//Input field for Task due date here i used variable name date instead of dueDate.
 const date = document.createElement("input");
 date.type = "date";
 inputForTask.name = "date";
 date.required = true;
 addNewTaskForm.appendChild(date);
 
+//Input field for Task due time here i used time as variable name instead of dueTime.
 const time = document.createElement("input");
 time.required = true;
 time.type = "time";
 inputForTask.name = "time";
 addNewTaskForm.appendChild(time);
 
+//Add Task Button to Add the Todo.
 const addTaskBtn = document.createElement("button");
 addTaskBtn.innerText = "Add Task";
 addTaskBtn.type = "submit";
 
 addNewTaskForm.appendChild(addTaskBtn);
 
-//
-
+//Add new Todo
 addNewTaskForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const formData = addNewTaskForm.children;
@@ -69,6 +89,7 @@ const taskContainer = document.createElement("div");
 taskContainer.classList.add("task-container");
 container.appendChild(taskContainer);
 
+//Function for deleting the Todo, using id which i assigned to each task.
 const deleteTask = (IdToDelete) => {
   let allTasks = JSON.parse(localStorage.getItem("Tasks"));
   allTasks = allTasks.filter((task) => task.Id !== IdToDelete);
@@ -76,6 +97,7 @@ const deleteTask = (IdToDelete) => {
   loadPage();
 };
 
+//Edit the Todo.
 const editTask = (IdToEdit) => {
   console.log(IdToEdit);
   let allTasks = JSON.parse(localStorage.getItem("Tasks"));
@@ -170,6 +192,7 @@ const renderTasks = (allTasks, TasksContainer) => {
   });
 };
 
+//Function for Sorting Todo's based on Dates, in this function i was created objects with dates as key and todos of that date as value;
 const SortByDate = (allTasks, TasksContainer) => {
   const tasksByDates = {};
 
@@ -193,71 +216,75 @@ const SortByDate = (allTasks, TasksContainer) => {
   }
 };
 
+const loadTodos = (allTasks, taskContainer) => {
+    if (allTasks.length === 0) {
+        const emptyContainer = document.createElement("h1");
+        emptyContainer.classList.add("empty-container");
+        emptyContainer.innerText = "No Tasks";
+        taskContainer.appendChild(emptyContainer);
+      } else {
+        const DueTasks = [],
+          TodaysTasks = [],
+          upComingTasks = [];
+    
+        const date = new Date();
+        const Today = `${date.getFullYear()}-${
+          date.getMonth() + 1
+        }-${date.getDate()}`;
+    
+        allTasks.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+    
+        allTasks.forEach((task) => {
+          if (task.Date === Today) {
+            TodaysTasks.push(task);
+          } else if (task.Date > Today) {
+            upComingTasks.push(task);
+          } else {
+            DueTasks.push(task);
+          }
+        });
+    
+        if (DueTasks.length > 0) {
+          const dueTasksContainer = document.createElement("div");
+          dueTasksContainer.classList.add("due-tasks");
+    
+          taskContainer.appendChild(dueTasksContainer);
+          const heading = document.createElement("h2");
+          heading.innerText = "Due Tasks";
+    
+          dueTasksContainer.appendChild(heading);
+          SortByDate(DueTasks, dueTasksContainer);
+        }
+    
+        if (TodaysTasks.length > 0) {
+          const todaysTasksContainer = document.createElement("div");
+          todaysTasksContainer.classList.add("todays-tasks");
+    
+          taskContainer.appendChild(todaysTasksContainer);
+          const heading = document.createElement("h2");
+          heading.innerText = "Today";
+    
+          todaysTasksContainer.appendChild(heading);
+          renderTasks(TodaysTasks, todaysTasksContainer);
+        }
+    
+        if (upComingTasks.length > 0) {
+          const todaysTasksContainer = document.createElement("div");
+          todaysTasksContainer.classList.add("upcoming-tasks");
+          taskContainer.appendChild(todaysTasksContainer);
+          const heading = document.createElement("h2");
+          heading.innerText = "Upcoming Tasks";
+          todaysTasksContainer.appendChild(heading);
+          SortByDate(upComingTasks, todaysTasksContainer);
+        }
+      }
+}
+//This Function will called on loading the page, after the header is created, its simply load the todos.
 const loadPage = () => {
   taskContainer.innerHTML = "";
   const allTasks = JSON.parse(localStorage.getItem("Tasks")) || [];
 
-  if (allTasks.length === 0) {
-    const emptyContainer = document.createElement("h1");
-    emptyContainer.classList.add("empty-container");
-    emptyContainer.innerText = "No Tasks";
-    taskContainer.appendChild(emptyContainer);
-  } else {
-    const DueTasks = [],
-      TodaysTasks = [],
-      upComingTasks = [];
-
-    const date = new Date();
-    const Today = `${date.getFullYear()}-${
-      date.getMonth() + 1
-    }-${date.getDate()}`;
-
-    allTasks.sort((a, b) => new Date(a.Date) - new Date(b.Date));
-
-    allTasks.forEach((task) => {
-      if (task.Date === Today) {
-        TodaysTasks.push(task);
-      } else if (task.Date > Today) {
-        upComingTasks.push(task);
-      } else {
-        DueTasks.push(task);
-      }
-    });
-
-    if (DueTasks.length > 0) {
-      const dueTasksContainer = document.createElement("div");
-      dueTasksContainer.classList.add("due-tasks");
-
-      taskContainer.appendChild(dueTasksContainer);
-      const heading = document.createElement("h2");
-      heading.innerText = "Due Tasks";
-
-      dueTasksContainer.appendChild(heading);
-      SortByDate(DueTasks, dueTasksContainer);
-    }
-
-    if (TodaysTasks.length > 0) {
-      const todaysTasksContainer = document.createElement("div");
-      todaysTasksContainer.classList.add("todays-tasks");
-
-      taskContainer.appendChild(todaysTasksContainer);
-      const heading = document.createElement("h2");
-      heading.innerText = "Today";
-
-      todaysTasksContainer.appendChild(heading);
-      renderTasks(TodaysTasks, todaysTasksContainer);
-    }
-
-    if (upComingTasks.length > 0) {
-      const todaysTasksContainer = document.createElement("div");
-      todaysTasksContainer.classList.add("upcoming-tasks");
-      taskContainer.appendChild(todaysTasksContainer);
-      const heading = document.createElement("h2");
-      heading.innerText = "Upcoming Tasks";
-      todaysTasksContainer.appendChild(heading);
-      SortByDate(upComingTasks, todaysTasksContainer);
-    }
-  }
+  loadTodos(allTasks, taskContainer);
 };
 
 loadPage();
